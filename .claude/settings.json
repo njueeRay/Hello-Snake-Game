@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx serve *)",
+      "Bash(python -m http.server *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- Session End: Task completed ---'"
+          }
+        ]
+      }
+    ]
+  }
+}

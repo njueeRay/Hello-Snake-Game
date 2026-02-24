@@ -1,0 +1,129 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0f0f1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  color: #e0e0e0;
+  overflow: hidden;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.score-board {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 24px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.score-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #7a7a9e;
+  text-transform: uppercase;
+}
+
+.score-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #00e676;
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
+  text-align: right;
+}
+
+.canvas-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 30px rgba(0, 230, 118, 0.08),
+    0 0 60px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+}
+
+#gameCanvas {
+  display: block;
+  background-color: #1a1a2e;
+}
+
+/* --- Overlays --- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(15, 15, 26, 0.85);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease;
+}
+
+.overlay-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlay-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.overlay-title {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: #00e676;
+  text-shadow: 0 0 40px rgba(0, 230, 118, 0.4);
+}
+
+.overlay-title--gameover {
+  color: #ff5252;
+  text-shadow: 0 0 40px rgba(255, 82, 82, 0.4);
+}
+
+.overlay-hint {
+  font-size: 18px;
+  color: #b0b0c8;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.overlay-controls {
+  font-size: 13px;
+  color: #6a6a8e;
+  letter-spacing: 1px;
+}
+
+.overlay-score {
+  font-size: 28px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

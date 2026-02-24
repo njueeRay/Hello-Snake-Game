@@ -1,0 +1,20 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+
+# Documentation (non-project)
+ClaudeCode用法介绍.md
+ClaudeCode最佳实践.md
+claude-code-handbook.md
+
+# Claude Code temp files
+tmpclaude-*
