@@ -26,14 +26,23 @@
     <div class="canvas-wrapper">
       <canvas id="gameCanvas" width="600" height="600"></canvas>
 
+      <button class="mute-btn" id="muteButton" aria-label="Toggle sound">♪</button>
+
+      <!-- Start / Difficulty selection -->
       <div class="overlay" id="startOverlay">
         <div class="overlay-content">
           <h1 class="overlay-title">SNAKE</h1>
-          <p class="overlay-hint">Press Space / Tap to Start</p>
-          <p class="overlay-controls">WASD / Arrow Keys · Swipe on Mobile</p>
+          <div class="difficulty-buttons">
+            <button class="btn-difficulty btn-difficulty--easy" data-difficulty="easy">EASY</button>
+            <button class="btn-difficulty btn-difficulty--normal btn-difficulty--active" data-difficulty="normal">NORMAL</button>
+            <button class="btn-difficulty btn-difficulty--hard" data-difficulty="hard">HARD</button>
+          </div>
+          <p class="overlay-hint">Click a mode · or Space for Normal</p>
+          <p class="overlay-controls">WASD / Arrow Keys &nbsp;·&nbsp; M = Mute &nbsp;·&nbsp; Swipe on Mobile</p>
         </div>
       </div>
 
+      <!-- Game Over -->
       <div class="overlay overlay-hidden" id="gameOverOverlay">
         <div class="overlay-content">
           <h1 class="overlay-title overlay-title--gameover">GAME OVER</h1>
@@ -43,6 +52,7 @@
         </div>
       </div>
 
+      <!-- Victory -->
       <div class="overlay overlay-hidden" id="victoryOverlay">
         <div class="overlay-content">
           <h1 class="overlay-title overlay-title--victory">YOU WIN!</h1>
@@ -51,6 +61,7 @@
         </div>
       </div>
 
+      <!-- Pause -->
       <div class="overlay overlay-hidden" id="pauseOverlay">
         <div class="overlay-content">
           <h1 class="overlay-title">PAUSED</h1>

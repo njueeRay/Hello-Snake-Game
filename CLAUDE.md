@@ -9,18 +9,26 @@
 ```
 Snake/
 ├── CLAUDE.md                 ← 本文件，项目核心规范
+├── README.md                 ← 开源门面（徽章、功能、上手指南）
+├── LICENSE                   ← MIT License
+├── CONTRIBUTING.md           ← 贡献指南
+├── .gitignore
+├── .github/
+│   ├── workflows/deploy.yml  ← GitHub Pages 自动部署
+│   └── ISSUE_TEMPLATE/       ← Bug report / Feature request 模板
 ├── .claude/                  ← Claude Code 配置
 │   ├── settings.json         ← 权限控制
 │   ├── agents/               ← 专项 AI 团队
 │   └── commands/             ← 自定义斜杠命令
 ├── index.html                ← 游戏入口页面
 ├── src/
-│   ├── game.js               ← 游戏核心逻辑
+│   ├── game.js               ← 游戏核心逻辑 + 状态机
 │   ├── snake.js              ← 蛇的实体与行为
 │   ├── food.js               ← 食物生成逻辑
 │   ├── renderer.js           ← Canvas 渲染层
-│   └── ui.js                 ← 分数、界面交互
-└── style.css                 ← 全局样式
+│   ├── ui.js                 ← DOM 界面交互
+│   └── audio.js              ← Web Audio API 音效合成
+└── style.css                 ← 全局样式（暗色主题）
 ```
 
 ---
@@ -88,5 +96,9 @@ npx serve .
 - [x] 移动端触摸支持（滑动控制 + 点击暂停）
 - [x] HiDPI 适配（devicePixelRatio 缩放）
 - [x] 最高分持久化（localStorage）
-- [ ] 音效（可选，Web Audio API）
-- [ ] 难度选择（可选）
+- [x] 音效（Web Audio API，oscillator 合成）
+- [x] 难度选择（Easy / Normal / Hard）
+- [x] 开源文档（README + LICENSE + CONTRIBUTING + Issue Templates）
+- [x] GitHub Pages 自动部署（GitHub Actions）
+- [ ] 障碍物模式（可选）
+- [ ] 特殊食物类型（可选）

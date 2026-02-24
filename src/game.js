@@ -2,15 +2,19 @@ import { Snake } from './snake.js';
 import { Food } from './food.js';
 import { Renderer } from './renderer.js';
 import { UI } from './ui.js';
+import { AudioSystem } from './audio.js';
 
 const CANVAS_SIZE = 600;
 const CELL_SIZE = 20;
 const GRID_SIZE = CANVAS_SIZE / CELL_SIZE; // 30
 
-const INITIAL_SPEED = 150;
-const SPEED_STEP = 5;
+const DIFFICULTY_PRESETS = {
+  easy:   { initialSpeed: 200, speedStep: 3, minSpeed: 100 },
+  normal: { initialSpeed: 150, speedStep: 5, minSpeed:  50 },
+  hard:   { initialSpeed:  90, speedStep: 8, minSpeed:  30 },
+};
+
 const FOODS_PER_SPEEDUP = 5;
-const MIN_SPEED = 50;
 const SCORE_PER_FOOD = 10;
 
 const EFFECT_FOOD_EATEN_DURATION = 400;
@@ -18,7 +22,7 @@ const EFFECT_SCORE_POPUP_DURATION = 800;
 
 const LS_KEY_HIGH_SCORE = 'snakeHighScore';
 
-const SWIPE_THRESHOLD = 20; // px minimum swipe distance
+const SWIPE_THRESHOLD = 20;
 
 const KEY_MAP = {
   ArrowUp: 'up',   w: 'up',   W: 'up',
@@ -36,26 +40,27 @@ class Game {
     const canvas = document.getElementById('gameCanvas');
     this.renderer = new Renderer(canvas, CELL_SIZE);
     this.ui = new UI();
+    this.audio = new AudioSystem();
 
     this.highScore = this._loadHighScore();
     this.ui.updateHighScore(this.highScore);
 
+    this.difficulty = 'normal';
     this.state = 'idle';
     this.snake = null;
     this.food = null;
     this.score = 0;
     this.level = 1;
     this.foodEaten = 0;
-    this.tickInterval = INITIAL_SPEED;
+    this.tickInterval = DIFFICULTY_PRESETS.normal.initialSpeed;
     this.lastTickTime = 0;
     this.animFrameId = null;
     this.currentTime = 0;
-
-    /** Active particle/popup effects. */
     this.effects = [];
 
     this._bindInput();
     this._bindTouchInput();
+    this._bindDifficultyButtons();
     this._drawIdleScreen();
   }
 
@@ -64,7 +69,19 @@ class Game {
     this.renderer.drawGrid(0);
   }
 
+  /**
+   * Start or restart with a specific difficulty.
+   * @param {'easy'|'normal'|'hard'} key
+   */
+  startWithDifficulty(key) {
+    this.difficulty = key;
+    this._updateActiveDifficultyButton();
+    this.start();
+  }
+
   start() {
+    const preset = DIFFICULTY_PRESETS[this.difficulty];
+
     this.snake = new Snake(Math.floor(GRID_SIZE / 2), Math.floor(GRID_SIZE / 2));
     this.food = new Food(GRID_SIZE, GRID_SIZE);
     this.food.spawn(this.snake.body);
@@ -72,7 +89,7 @@ class Game {
     this.score = 0;
     this.level = 1;
     this.foodEaten = 0;
-    this.tickInterval = INITIAL_SPEED;
+    this.tickInterval = preset.initialSpeed;
     this.lastTickTime = 0;
     this.effects = [];
 
@@ -91,12 +108,9 @@ class Game {
     if (this.state !== 'playing') return;
 
     this.currentTime = timestamp;
+    if (this.lastTickTime === 0) this.lastTickTime = timestamp;
 
-    if (this.lastTickTime === 0) {
-      this.lastTickTime = timestamp;
-    }
-
-    // Purge expired effects each frame
+    // Purge expired effects
     this.effects = this.effects.filter(
       (fx) => timestamp - fx.startTime < fx.duration
     );
@@ -129,28 +143,25 @@ class Game {
       this.score += SCORE_PER_FOOD;
       this.foodEaten += 1;
       this.ui.updateScore(this.score);
+      this.audio.playEat();
       this._adjustSpeed();
       this._saveHighScore();
 
-      // Visual effects for eating food
       this.effects.push({
         type: 'foodEaten',
-        x: fp.x,
-        y: fp.y,
+        x: fp.x, y: fp.y,
         startTime: this.currentTime,
         duration: EFFECT_FOOD_EATEN_DURATION,
       });
       this.effects.push({
         type: 'scorePopup',
-        x: fp.x,
-        y: fp.y,
+        x: fp.x, y: fp.y,
         startTime: this.currentTime,
         duration: EFFECT_SCORE_POPUP_DURATION,
       });
 
       this.food.spawn(this.snake.body);
 
-      // Win: snake fills the entire grid
       if (this.food.position.x === -1) {
         this._gameWon();
       }
@@ -158,12 +169,17 @@ class Game {
   }
 
   _adjustSpeed() {
+    const preset = DIFFICULTY_PRESETS[this.difficulty];
     const tier = Math.floor(this.foodEaten / FOODS_PER_SPEEDUP);
-    this.tickInterval = Math.max(INITIAL_SPEED - tier * SPEED_STEP, MIN_SPEED);
+    this.tickInterval = Math.max(
+      preset.initialSpeed - tier * preset.speedStep,
+      preset.minSpeed
+    );
     const newLevel = tier + 1;
     if (newLevel !== this.level) {
       this.level = newLevel;
       this.ui.updateLevel(this.level);
+      this.audio.playLevelUp();
     }
   }
 
@@ -182,6 +198,7 @@ class Game {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
     }
+    this.audio.playDeath();
     this._render(this.currentTime);
     this.renderer.drawDeathFlash(this.snake.head);
     this.ui.showGameOver(this.score, this.highScore);
@@ -194,6 +211,7 @@ class Game {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
     }
+    this.audio.playLevelUp();
     this._render(this.currentTime);
     this.ui.showVictory(this.score, this.highScore);
   }
@@ -205,6 +223,7 @@ class Game {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
     }
+    this.audio.playPause();
     this.ui.showPause(this.score);
   }
 
@@ -233,7 +252,7 @@ class Game {
       try {
         localStorage.setItem(LS_KEY_HIGH_SCORE, String(this.highScore));
       } catch {
-        // localStorage unavailable (private mode, etc.) — gracefully ignore
+        // localStorage unavailable — gracefully ignore
       }
     }
   }
@@ -255,12 +274,21 @@ class Game {
     }
     if (event.key === ' ' || event.code === 'Space') {
       this._handleSpace();
+      return;
+    }
+    // Mute toggle
+    if (event.key === 'm' || event.key === 'M') {
+      this.audio.muted = !this.audio.muted;
+      this.ui.updateMuteButton(this.audio.muted);
     }
   }
 
   _handleSpace() {
     switch (this.state) {
       case 'idle':
+        // Space starts with currently highlighted difficulty (default: normal)
+        this.start();
+        break;
       case 'gameover':
       case 'won':
         this.start();
@@ -274,6 +302,32 @@ class Game {
       default:
         break;
     }
+  }
+
+  /** Bind difficulty selector buttons and the mute toggle button. */
+  _bindDifficultyButtons() {
+    document.querySelectorAll('[data-difficulty]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.startWithDifficulty(btn.dataset.difficulty);
+      });
+    });
+
+    const muteBtn = document.getElementById('muteButton');
+    if (muteBtn) {
+      muteBtn.addEventListener('click', () => {
+        this.audio.muted = !this.audio.muted;
+        this.ui.updateMuteButton(this.audio.muted);
+      });
+    }
+
+    this._updateActiveDifficultyButton();
+  }
+
+  /** Sync the active CSS class on difficulty buttons to match this.difficulty. */
+  _updateActiveDifficultyButton() {
+    document.querySelectorAll('[data-difficulty]').forEach((btn) => {
+      btn.classList.toggle('btn-difficulty--active', btn.dataset.difficulty === this.difficulty);
+    });
   }
 
   /** Swipe-to-control for mobile browsers. */
@@ -293,7 +347,6 @@ class Game {
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = e.changedTouches[0].clientY - touchStartY;
 
-      // Tap (no significant swipe) -> space action
       if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
         this._handleSpace();
         return;

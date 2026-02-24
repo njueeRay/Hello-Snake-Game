@@ -11,6 +11,7 @@ export class UI {
     this.gameOverOverlay  = document.getElementById('gameOverOverlay');
     this.victoryOverlay   = document.getElementById('victoryOverlay');
     this.pauseOverlay     = document.getElementById('pauseOverlay');
+    this.muteButton       = document.getElementById('muteButton');
   }
 
   /** @param {number} score */
@@ -72,5 +73,16 @@ export class UI {
 
   hidePause() {
     this.pauseOverlay.classList.add('overlay-hidden');
+  }
+
+  /**
+   * Reflect the muted state on the mute button.
+   * @param {boolean} muted
+   */
+  updateMuteButton(muted) {
+    if (!this.muteButton) return;
+    this.muteButton.classList.toggle('mute-btn--off', muted);
+    this.muteButton.textContent = muted ? '♪' : '♪';
+    this.muteButton.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
   }
 }
