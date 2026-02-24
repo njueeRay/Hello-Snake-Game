@@ -1,6 +1,6 @@
 /**
  * Direction vectors mapped by name.
- * Kept as a module-level constant so every method can reference it.
+ * Module-level constant shared across all methods.
  */
 const DIRECTION_VECTORS = {
   up:    { x:  0, y: -1 },
@@ -9,16 +9,12 @@ const DIRECTION_VECTORS = {
   right: { x:  1, y:  0 },
 };
 
-/**
- * Pairs of directions that are opposite to each other.
- * Used to block 180-degree reversals.
- */
 const OPPOSITES = {
-  up: 'down',
-  down: 'up',
-  left: 'right',
-  right: 'left',
+  up: 'down', down: 'up', left: 'right', right: 'left',
 };
+
+/** Maximum queued direction changes to buffer between ticks. */
+const MAX_QUEUE_SIZE = 2;
 
 export class Snake {
   /**
@@ -32,7 +28,8 @@ export class Snake {
       this.body.push({ x: startX - i, y: startY });
     }
     this.direction = 'right';
-    this.nextDirection = 'right';
+    /** Input queue — stores up to MAX_QUEUE_SIZE pending direction changes. */
+    this._directionQueue = [];
     this._growPending = false;
   }
 
@@ -42,29 +39,34 @@ export class Snake {
   }
 
   /**
-   * Queue a direction change. Ignores 180-degree reversals and
-   * same-direction repeats so rapid key presses cannot break the snake.
+   * Queue a direction change. Validates against the last queued direction
+   * (not the current one) to prevent 180-degree reversals even on rapid input.
    * @param {'up'|'down'|'left'|'right'} dir
    */
   setDirection(dir) {
     if (!DIRECTION_VECTORS[dir]) return;
-    if (OPPOSITES[dir] === this.nextDirection) return;
-    this.nextDirection = dir;
+    const lastQueued = this._directionQueue.length > 0
+      ? this._directionQueue[this._directionQueue.length - 1]
+      : this.direction;
+    if (OPPOSITES[dir] === lastQueued) return;
+    if (this._directionQueue.length >= MAX_QUEUE_SIZE) return;
+    this._directionQueue.push(dir);
   }
 
   /**
    * Advance the snake by one grid cell.
-   * If grow() was called beforehand the tail is preserved.
+   * Consumes one direction from the queue, then moves.
    */
   move() {
-    this.direction = this.nextDirection;
+    if (this._directionQueue.length > 0) {
+      this.direction = this._directionQueue.shift();
+    }
     const vec = DIRECTION_VECTORS[this.direction];
     const newHead = {
       x: this.head.x + vec.x,
       y: this.head.y + vec.y,
     };
     this.body.unshift(newHead);
-
     if (this._growPending) {
       this._growPending = false;
     } else {
@@ -95,7 +97,6 @@ export class Snake {
 
   /**
    * Check whether a given grid position overlaps any body segment.
-   * Used by Food to avoid spawning inside the snake.
    * @param {number} gx
    * @param {number} gy
    * @returns {boolean}

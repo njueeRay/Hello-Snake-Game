@@ -24,21 +24,39 @@ body {
   gap: 16px;
 }
 
+/* --- Score board --- */
+
 .score-board {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 8px 24px;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
   background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 16px;
+}
+
+.score-item + .score-item {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.score-item--main {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
 .score-label {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: #7a7a9e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #5a5a7e;
   text-transform: uppercase;
 }
 
@@ -48,8 +66,31 @@ body {
   color: #00e676;
   font-variant-numeric: tabular-nums;
   min-width: 80px;
-  text-align: right;
+  text-align: center;
+  line-height: 1.1;
 }
+
+.level-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #b0b0c8;
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.highscore-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffd740;
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* --- Canvas --- */
 
 .canvas-wrapper {
   position: relative;
@@ -74,9 +115,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(15, 15, 26, 0.85);
+  background-color: rgba(15, 15, 26, 0.88);
   backdrop-filter: blur(4px);
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
 }
 
 .overlay-hidden {
@@ -89,7 +130,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .overlay-title {
@@ -97,33 +138,51 @@ body {
   font-weight: 800;
   letter-spacing: 8px;
   color: #00e676;
-  text-shadow: 0 0 40px rgba(0, 230, 118, 0.4);
+  text-shadow: 0 0 40px rgba(0, 230, 118, 0.5);
 }
 
 .overlay-title--gameover {
   color: #ff5252;
-  text-shadow: 0 0 40px rgba(255, 82, 82, 0.4);
+  text-shadow: 0 0 40px rgba(255, 82, 82, 0.5);
+}
+
+.overlay-title--victory {
+  color: #ffd740;
+  text-shadow: 0 0 40px rgba(255, 215, 64, 0.6);
+  animation: victory-glow 1.5s ease-in-out infinite;
+}
+
+.overlay-score {
+  font-size: 26px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.overlay-highscore {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffd740;
+  letter-spacing: 1px;
 }
 
 .overlay-hint {
-  font-size: 18px;
+  font-size: 17px;
   color: #b0b0c8;
   animation: pulse 2s ease-in-out infinite;
 }
 
 .overlay-controls {
-  font-size: 13px;
-  color: #6a6a8e;
+  font-size: 12px;
+  color: #5a5a7e;
   letter-spacing: 1px;
-}
-
-.overlay-score {
-  font-size: 28px;
-  font-weight: 600;
-  color: #e0e0e0;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes victory-glow {
+  0%, 100% { text-shadow: 0 0 40px rgba(255, 215, 64, 0.6); }
+  50%       { text-shadow: 0 0 70px rgba(255, 215, 64, 1); }
 }

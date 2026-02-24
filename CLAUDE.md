@@ -36,11 +36,21 @@ Snake/
 
 ## 游戏规范
 
-- Canvas 尺寸：600×600，格子大小：20px（30×30 网格）
-- 帧率目标：requestAnimationFrame 驱动，速度用计时器控制（初始 150ms/格）
-- 方向控制：WASD + 方向键，禁止 180° 掉头
-- 食物：随机位置，不与蛇身重叠
-- 计分：每吃一个食物 +10 分，每 5 个食物移动速度提升
+- Canvas 尺寸：600×600，格子大小：20px（30×30 网格）；HiDPI 自动适配（devicePixelRatio）
+- 帧率目标：requestAnimationFrame 驱动，速度用计时器控制（初始 150ms/格，最低 50ms）
+- 方向控制：WASD + 方向键 + 移动端滑动，禁止 180° 掉头；输入队列最多缓冲 2 个指令
+- 食物：随机位置，不与蛇身重叠；呼吸动画（sin 波±10% 缩放）
+- 计分：每吃一个食物 +10 分，每 5 个食物提升一个 Level，同步加速
+- 最高分：localStorage 持久化，游戏结束时自动存档
+- 特效：吃食物时扩散光环 + "+10" 浮字；死亡时红色径向渐变闪光
+- 胜利条件：蛇填满整个 30×30 网格时触发 YOU WIN 界面
+
+## 关键架构约定
+
+- `game.js` 中所有特效通过 `this.effects[]` 统一管理，每帧 filter 清除过期项
+- `renderer.js` 负责所有 Canvas 绘制，不持有游戏状态
+- `ui.js` 只操作 DOM，通过 classList 切换 `overlay-hidden`，不写 inline style
+- `snake.js` 的 `setDirection()` 校验基于 `_directionQueue` 末位，非 `direction` 当前值
 
 ## 禁止事项
 
@@ -73,5 +83,10 @@ npx serve .
 - [x] Claude Code 配置工程（基础设施）
 - [x] 游戏核心实现（蛇、食物、碰撞检测）
 - [x] 渲染层（Canvas 绘制）
-- [x] UI 层（分数、开始/结束界面）
-- [ ] 音效与动画增强（可选）
+- [x] UI 层（分数、等级、最高分、开始/结束/胜利/暂停界面）
+- [x] 动画增强（食物呼吸、吃食物特效、死亡闪光、+10浮字）
+- [x] 移动端触摸支持（滑动控制 + 点击暂停）
+- [x] HiDPI 适配（devicePixelRatio 缩放）
+- [x] 最高分持久化（localStorage）
+- [ ] 音效（可选，Web Audio API）
+- [ ] 难度选择（可选）
