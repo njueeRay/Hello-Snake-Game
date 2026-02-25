@@ -102,3 +102,4 @@ npx serve .
 - [x] GitHub Pages 自动部署（GitHub Actions）
 - [x] 特殊食物类型（Golden +50分无增长8s失效 / Blue +20分速度debuff）
 - [x] 障碍物模式（Level 3 开启，每升级 +2 块，上限 12，撞障碍物即死）
+- [x] v1.0.0 发版（CHANGELOG、README 更新、git tag、代码评审修复）
