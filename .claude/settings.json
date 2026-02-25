@@ -1,17 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx serve *)",
-      "Bash(python -m http.server *)",
-      "Bash(git add *)",
-      "Bash(git commit *)",
-      "Bash(git status)",
-      "Bash(git diff *)",
-      "Bash(git log *)"
+      "Bash(*)"
     ],
     "deny": [
       "Bash(rm -rf *)",
-      "Bash(git push --force *)"
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(* --no-verify*)"
     ]
   },
   "env": {
