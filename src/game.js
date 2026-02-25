@@ -253,6 +253,7 @@ class Game {
   }
 
   _render(timestamp = 0) {
+    if (!this.food || !this.obstacles) return;
     this.renderer.clear();
     this.renderer.drawGrid(this.score);
     this.renderer.drawObstacles(this.obstacles.getPositions());

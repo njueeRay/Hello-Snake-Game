@@ -12,6 +12,12 @@ export class UI {
     this.victoryOverlay   = document.getElementById('victoryOverlay');
     this.pauseOverlay     = document.getElementById('pauseOverlay');
     this.muteButton       = document.getElementById('muteButton');
+
+    ['scoreDisplay','levelDisplay','highScoreDisplay','finalScore','finalHighScore',
+     'victoryScore','pauseScore','startOverlay','gameOverOverlay','victoryOverlay','pauseOverlay',
+    ].forEach((key) => {
+      if (!this[key]) console.error(`[UI] Missing DOM element: #${key}`);
+    });
   }
 
   /** @param {number} score */
@@ -82,7 +88,7 @@ export class UI {
   updateMuteButton(muted) {
     if (!this.muteButton) return;
     this.muteButton.classList.toggle('mute-btn--off', muted);
-    this.muteButton.textContent = muted ? '♪' : '♪';
+    this.muteButton.textContent = muted ? '🔇' : '♪';
     this.muteButton.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
   }
 }

@@ -15,6 +15,9 @@ export class AudioSystem {
       const Ctor = window.AudioContext || window.webkitAudioContext;
       this.ctx = new Ctor();
     }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
     return this.ctx;
   }
 

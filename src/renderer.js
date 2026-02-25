@@ -110,6 +110,7 @@ export class Renderer {
    * @param {Array<{x: number, y: number}>} obstacles
    */
   drawObstacles(obstacles) {
+    if (!obstacles || obstacles.length === 0) return;
     const { ctx } = this;
     const pad = 1;
 

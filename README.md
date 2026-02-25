@@ -1,6 +1,7 @@
 # 🐍 Hello Snake Game
 
 [![Play Online](https://img.shields.io/badge/Play-Online-00e676?style=for-the-badge&logo=github)](https://njueeray.github.io/Hello-Snake-Game/)
+[![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen?style=for-the-badge)](https://github.com/njueeRay/Hello-Snake-Game/releases/tag/v1.0.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 [![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f0db4f?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![HTML5 Canvas](https://img.shields.io/badge/HTML5-Canvas-e34c26?style=for-the-badge&logo=html5)](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
@@ -25,9 +26,11 @@ python -m http.server 8080
 |---------|---------|
 | 🎯 **Difficulty Modes** | Easy / Normal / Hard with distinct speed curves |
 | 📈 **Progressive Speed** | Level up every 5 foods, speed increases dynamically |
+| 🧱 **Obstacle Mode** | Dynamic walls appear from Level 3, scaling with each level |
+| 🌟 **Special Foods** | Golden (+50 pts, no growth) · Blue (+20 pts, speed debuff) · Normal (+10 pts) |
 | 🏆 **High Score** | Persisted locally via `localStorage` |
 | 🎵 **Sound Effects** | Synthesized via Web Audio API — zero audio files |
-| ✨ **Visual Effects** | Eat ring flash · +10 popup · death radial glow |
+| ✨ **Visual Effects** | Eat ring flash · score popup · death radial glow · food expiry flash |
 | 💫 **Breathing Food** | Sin-wave pulse animation on food |
 | 📱 **Mobile Support** | Swipe to steer, tap for pause/resume |
 | 🖥️ **HiDPI Ready** | Auto-scales for Retina / high-DPI displays |
@@ -51,9 +54,14 @@ python -m http.server 8080
 - **Tap** to Start / Pause / Resume
 
 ### Rules
-- Eat food to grow and score points (+10 per food)
-- Avoid hitting walls or your own body
+- Eat food to grow and score points
+- Avoid hitting walls, your own body, or obstacles
 - Every 5 foods = Level Up + increased speed
+- **Food types:**
+  - 🔴 **Normal** — +10 pts, snake grows
+  - 🟡 **Golden** (15% chance) — +50 pts, no growth, expires in 8s
+  - 🔵 **Blue** (15% chance) — +20 pts, snake grows, temporary speed reduction, expires in 6s
+- **Obstacles** appear from Level 3 onward, adding 2 blocks per level (max 12), reshuffled each level-up
 - Fill the entire grid = **Victory** 🏆
 
 ## 🏗️ Architecture
@@ -65,7 +73,8 @@ Snake/
 └── src/
     ├── game.js         # Game controller & state machine
     ├── snake.js        # Snake entity, movement, collision
-    ├── food.js         # Food placement algorithm
+    ├── food.js         # Food placement & type selection
+    ├── obstacles.js    # Dynamic obstacle generation
     ├── renderer.js     # Canvas drawing, effects system
     ├── ui.js           # DOM-only UI manager
     └── audio.js        # Web Audio API sound synthesizer
@@ -76,8 +85,9 @@ Snake/
 **Key Design Decisions:**
 - **Direction Queue** (max 2): prevents rapid-input from causing 180° reversal
 - **Effects Array**: all particle effects managed centrally in `game.js`, rendered each rAF frame
-- **Free-Cell Food Spawn**: O(grid_area) enumeration guarantees uniform distribution at any snake length
+- **Free-Cell Food Spawn**: O(grid_area) enumeration guarantees uniform distribution at any snake length, excludes obstacles
 - **Lazy AudioContext**: created only on first user gesture, respecting browser autoplay policy
+- **Obstacle Module**: `Obstacles.generate(level, excludedCells)` is stateless per call — safe to call on every level-up
 
 ## 🛠️ Tech Stack
 
@@ -120,10 +130,13 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## 🗺️ Roadmap
 
-- [ ] Obstacle mode (walls appear as score increases)
-- [ ] Special food types (bonus points, speed boost)
+**v1.0.0 — Released** ✅
+
+Future ideas (community contributions welcome):
 - [ ] Online leaderboard
 - [ ] Two-player mode (split keyboard)
+- [ ] Custom snake skins / color themes
+- [ ] Combo score multiplier system
 
 ## 📄 License
 
