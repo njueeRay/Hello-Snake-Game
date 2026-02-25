@@ -21,6 +21,10 @@
         <span class="score-label">BEST</span>
         <span class="highscore-value" id="highScoreDisplay">0</span>
       </div>
+      <div class="score-item score-item--hidden" id="comboItem">
+        <span class="score-label">COMBO</span>
+        <span class="combo-value" id="comboDisplay">×1</span>
+      </div>
     </div>
 
     <div class="canvas-wrapper">
@@ -38,6 +42,7 @@
             <button class="btn-difficulty btn-difficulty--hard" data-difficulty="hard">HARD</button>
           </div>
           <p class="overlay-hint">Click a mode · or Space for Normal</p>
+          <button class="btn-leaderboard" id="leaderboardButton">🏆 TOP 10</button>
           <p class="overlay-controls">WASD / Arrow Keys &nbsp;·&nbsp; M = Mute &nbsp;·&nbsp; Swipe on Mobile</p>
         </div>
       </div>
@@ -48,6 +53,11 @@
           <h1 class="overlay-title overlay-title--gameover">GAME OVER</h1>
           <p class="overlay-score">Score: <span id="finalScore">0</span></p>
           <p class="overlay-highscore">Best: <span id="finalHighScore">0</span></p>
+          <div class="new-record-badge overlay-hidden" id="newRecordBadge">🏅 TOP 3!</div>
+          <table class="lb-table">
+            <thead><tr><th>#</th><th>Score</th><th>Mode</th><th>Date</th></tr></thead>
+            <tbody id="gameOverLbBody"></tbody>
+          </table>
           <p class="overlay-hint">Press Space / Tap to Restart</p>
         </div>
       </div>
@@ -65,8 +75,42 @@
       <div class="overlay overlay-hidden" id="pauseOverlay">
         <div class="overlay-content">
           <h1 class="overlay-title">PAUSED</h1>
-          <p class="overlay-score">Score: <span id="pauseScore">0</span></p>
-          <p class="overlay-hint">Press Space / Tap to Resume</p>
+          <div class="pause-stats">
+            <div class="pause-stat-row">
+              <span class="pause-stat-label">SCORE</span>
+              <span class="pause-stat-value" id="pauseScore">0</span>
+            </div>
+            <div class="pause-stat-row">
+              <span class="pause-stat-label">LEVEL</span>
+              <span class="pause-stat-value" id="pauseLevel">1</span>
+            </div>
+            <div class="pause-stat-row">
+              <span class="pause-stat-label">MODE</span>
+              <span class="pause-stat-value" id="pauseDifficulty">NORMAL</span>
+            </div>
+            <div class="pause-stat-row">
+              <span class="pause-stat-label">TIME</span>
+              <span class="pause-stat-value" id="pauseTime">0:00</span>
+            </div>
+            <div class="pause-stat-row">
+              <span class="pause-stat-label">BEST COMBO</span>
+              <span class="pause-stat-value" id="pauseMaxCombo">×1</span>
+            </div>
+          </div>
+          <p class="overlay-hint">Space / Tap to Resume</p>
+          <button class="btn-abandon" id="abandonButton">ABANDON</button>
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="overlay overlay-hidden" id="leaderboardOverlay">
+        <div class="overlay-content">
+          <h1 class="overlay-title">TOP 10</h1>
+          <table class="lb-table lb-table--full">
+            <thead><tr><th>#</th><th>Score</th><th>Mode</th><th>Date</th></tr></thead>
+            <tbody id="leaderboardBody"></tbody>
+          </table>
+          <button class="btn-abandon" id="leaderboardClose">CLOSE</button>
         </div>
       </div>
     </div>

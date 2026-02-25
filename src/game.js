@@ -4,6 +4,7 @@ import { Renderer } from './renderer.js';
 import { UI } from './ui.js';
 import { AudioSystem } from './audio.js';
 import { Obstacles } from './obstacles.js';
+import { Leaderboard } from './leaderboard.js';
 
 const CANVAS_SIZE = 600;
 const CELL_SIZE = 20;
@@ -34,6 +35,17 @@ const EFFECT_DEBUFF_DURATION = 500;
 
 const LS_KEY_HIGH_SCORE = 'snakeHighScore';
 const SWIPE_THRESHOLD = 20;
+
+/** 连击窗口：吃完食物后N格移动内吃到下一个食物则连击 */
+const COMBO_WINDOW_TICKS = 25;
+
+/** combo数量对应的分数倍数 */
+const COMBO_MULTIPLIERS = [
+  { minCombo: 10, mult: 3.0 },
+  { minCombo: 6,  mult: 2.0 },
+  { minCombo: 3,  mult: 1.5 },
+  { minCombo: 0,  mult: 1.0 },
+];
 
 const KEY_MAP = {
   ArrowUp: 'up',   w: 'up',   W: 'up',
@@ -74,6 +86,13 @@ class Game {
     this.speedDebuff = 0;
     this.speedDebuffUntil = null;
 
+    // Combo & leaderboard
+    this.leaderboard   = new Leaderboard();
+    this._combo        = 0;
+    this._maxCombo     = 0;
+    this._ticksSinceFd = 0;   // ticks elapsed since last food eaten
+    this._gameStartMs  = 0;   // Date.now() when game started
+
     this._bindInput();
     this._bindTouchInput();
     this._bindDifficultyButtons();
@@ -106,6 +125,10 @@ class Game {
     this.effects = [];
     this.speedDebuff = 0;
     this.speedDebuffUntil = null;
+    this._combo        = 0;
+    this._maxCombo     = 0;
+    this._ticksSinceFd = 0;
+    this._gameStartMs  = Date.now();
     this.food.spawn(this.snake.body, []);
     this._setFoodExpiry();
     this.obstacles.generate(this.level, [...this.snake.body, this.food.position]);
@@ -155,6 +178,13 @@ class Game {
   _update() {
     this.snake.move();
 
+    this._ticksSinceFd++;
+    // Break combo if window exceeded
+    if (this._ticksSinceFd > COMBO_WINDOW_TICKS && this._combo > 0) {
+      this._combo = 0;
+      this.ui.updateCombo(0);
+    }
+
     if (
       this.snake.checkWallCollision(GRID_SIZE, GRID_SIZE) ||
       this.snake.checkSelfCollision() ||
@@ -176,9 +206,31 @@ class Game {
         this.snake.grow();
       }
 
-      this.score += pts;
+      // Combo logic
+      if (this._ticksSinceFd <= COMBO_WINDOW_TICKS) {
+        this._combo++;
+      } else {
+        this._combo = 1;
+      }
+      this._ticksSinceFd = 0;
+      if (this._combo > this._maxCombo) this._maxCombo = this._combo;
+      const multiplier = COMBO_MULTIPLIERS.find(c => this._combo >= c.minCombo).mult;
+
+      this.score += Math.round(pts * multiplier);
       this.foodEaten += 1;
       this.ui.updateScore(this.score);
+      this.ui.updateCombo(this._combo);
+      // Combo tier change effect
+      if (multiplier > 1) {
+        this.effects.push({
+          type: 'comboFlash',
+          mult: multiplier,
+          x: Math.floor(GRID_SIZE / 2),
+          y: Math.floor(GRID_SIZE / 2),
+          startTime: this.currentTime,
+          duration: 700,
+        });
+      }
       this._adjustSpeed();
       this._saveHighScore();
 
@@ -211,7 +263,7 @@ class Game {
       this.effects.push({
         type: 'scorePopup',
         foodType: type,
-        value: pts,
+        value: Math.round(pts * multiplier),
         x: fp.x, y: fp.y,
         startTime: this.currentTime,
         duration: EFFECT_SCORE_POPUP_DURATION,
@@ -272,7 +324,13 @@ class Game {
     this.audio.playDeath();
     this._render(this.currentTime);
     this.renderer.drawDeathFlash(this.snake.head);
-    this.ui.showGameOver(this.score, this.highScore);
+    const rank = this.leaderboard.add({
+      score:      this.score,
+      level:      this.level,
+      difficulty: this.difficulty,
+      maxCombo:   this._maxCombo,
+    });
+    this.ui.showGameOver(this.score, this.highScore, this.leaderboard.getAll(), rank);
   }
 
   _gameWon() {
@@ -284,7 +342,13 @@ class Game {
     }
     this.audio.playLevelUp();
     this._render(this.currentTime);
-    this.ui.showVictory(this.score, this.highScore);
+    const rank = this.leaderboard.add({
+      score:      this.score,
+      level:      this.level,
+      difficulty: this.difficulty,
+      maxCombo:   this._maxCombo,
+    });
+    this.ui.showVictory(this.score, this.highScore, rank);
   }
 
   _pause() {
@@ -295,7 +359,13 @@ class Game {
       this.animFrameId = null;
     }
     this.audio.playPause();
-    this.ui.showPause(this.score);
+    this.ui.showPause({
+      score:     this.score,
+      level:     this.level,
+      difficulty: this.difficulty.toUpperCase(),
+      elapsed:   Date.now() - this._gameStartMs,
+      maxCombo:  this._maxCombo,
+    });
   }
 
   _resume() {
@@ -304,6 +374,22 @@ class Game {
     this.lastTickTime = 0;
     this.ui.hidePause();
     this.animFrameId = requestAnimationFrame((ts) => this._loop(ts));
+  }
+
+  _abandon() {
+    if (this.state !== 'paused') return;
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    this.snake     = null;
+    this.food      = null;
+    this.obstacles = null;
+    this.effects   = [];
+    this.state = 'idle';
+    this.ui.hidePause();
+    this.ui.showStartScreen();
+    this._drawIdleScreen();
   }
 
   // ---- High score ----
@@ -376,6 +462,18 @@ class Game {
         this.audio.muted = !this.audio.muted;
         this.ui.updateMuteButton(this.audio.muted);
       });
+    }
+    const lbBtn = document.getElementById('leaderboardButton');
+    if (lbBtn) {
+      lbBtn.addEventListener('click', () => this.ui.showLeaderboard(this.leaderboard.getAll()));
+    }
+    const lbClose = document.getElementById('leaderboardClose');
+    if (lbClose) {
+      lbClose.addEventListener('click', () => this.ui.hideLeaderboard());
+    }
+    const abandonBtn = document.getElementById('abandonButton');
+    if (abandonBtn) {
+      abandonBtn.addEventListener('click', () => this._abandon());
     }
     this._updateActiveDifficultyButton();
   }

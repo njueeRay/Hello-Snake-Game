@@ -277,6 +277,7 @@ export class Renderer {
    * @param {number} currentTime
    */
   drawEffects(effects, currentTime) {
+    const { ctx } = this;
     effects.forEach((fx) => {
       const progress = Math.min((currentTime - fx.startTime) / fx.duration, 1);
       if (fx.type === 'foodEaten') {
@@ -285,6 +286,19 @@ export class Renderer {
         this._drawScorePopup(fx, progress);
       } else if (fx.type === 'debuffActive') {
         this._drawDebuffIndicator(fx, progress);
+      } else if (fx.type === 'comboFlash') {
+        const alpha = 1 - progress;
+        const scale = 1 + progress * 0.5;
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.font = `bold ${Math.round(28 * scale)}px 'Segoe UI', Arial, sans-serif`;
+        ctx.fillStyle = '#ffd740';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const centerX = (this.logicalWidth / 2);
+        const centerY = (this.logicalHeight / 2) - 40 * progress;
+        ctx.fillText(`×${fx.mult}`, centerX, centerY);
+        ctx.restore();
       }
     });
   }
