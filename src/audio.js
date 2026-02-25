@@ -127,4 +127,13 @@ export class AudioSystem {
     osc.start(now);
     osc.stop(now + 0.05);
   }
+
+  /** Two-note chime for golden food pickup. */
+  playBonus() {
+    if (this.muted) return;
+    const ctx = this._getContext();
+    const now = ctx.currentTime;
+    this._scheduleNote(880, 'sine', now, 0.1, 0.2);
+    this._scheduleNote(1320, 'sine', now + 0.08, 0.15, 0.25);
+  }
 }

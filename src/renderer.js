@@ -106,34 +106,116 @@ export class Renderer {
   }
 
   /**
-   * Draw food with a sine-wave breathing pulse.
-   * @param {{x: number, y: number}} position
-   * @param {number} [timestamp=0] - rAF timestamp for animation
+   * Dispatch food rendering to the correct type-specific method.
+   * @param {import('./food.js').Food} food
+   * @param {number} [timestamp=0]
    */
-  drawFood(position, timestamp = 0) {
-    if (position.x < 0) return; // sentinel value when grid is full
+  drawFood(food, timestamp = 0) {
+    if (food.position.x < 0) return;
+
+    // Flashing when < 2 s remain for timed food
+    if (food.expireAt !== null) {
+      const remaining = food.expireAt - timestamp;
+      if (remaining < 2000 && Math.floor(timestamp / 200) % 2 === 1) return;
+    }
+
+    switch (food.type) {
+      case 'golden': this._drawGoldenFood(food.position, timestamp); break;
+      case 'blue':   this._drawBlueFood(food.position, timestamp);   break;
+      default:       this._drawNormalFood(food.position, timestamp);  break;
+    }
+  }
+
+  /**
+   * Normal red food with breathing pulse.
+   * @param {{x: number, y: number}} pos
+   * @param {number} timestamp
+   */
+  _drawNormalFood(pos, timestamp) {
     const { ctx, cellSize } = this;
-    const cx = position.x * cellSize + cellSize / 2;
-    const cy = position.y * cellSize + cellSize / 2;
+    const cx = pos.x * cellSize + cellSize / 2;
+    const cy = pos.y * cellSize + cellSize / 2;
     const pulse = 1 + Math.sin(timestamp * 0.004) * 0.1;
     const radius = (cellSize / 2 - 2) * pulse;
 
-    // Outer glow
     const glow = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius * 1.8);
     glow.addColorStop(0, 'rgba(255, 82, 82, 0.35)');
     glow.addColorStop(1, 'rgba(255, 82, 82, 0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(
-      position.x * cellSize - cellSize * 0.4,
-      position.y * cellSize - cellSize * 0.4,
-      cellSize * 1.8,
-      cellSize * 1.8
-    );
+    ctx.fillRect(pos.x * cellSize - cellSize * 0.4, pos.y * cellSize - cellSize * 0.4, cellSize * 1.8, cellSize * 1.8);
 
-    // Food body
     const grad = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, radius);
     grad.addColorStop(0, '#ff8a80');
     grad.addColorStop(1, '#ff1744');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /**
+   * Golden food: +50 pts, no growth. Gold circle with star-burst glow.
+   * @param {{x: number, y: number}} pos
+   * @param {number} timestamp
+   */
+  _drawGoldenFood(pos, timestamp) {
+    const { ctx, cellSize } = this;
+    const cx = pos.x * cellSize + cellSize / 2;
+    const cy = pos.y * cellSize + cellSize / 2;
+    // Slightly faster, more dramatic pulse
+    const pulse = 1 + Math.sin(timestamp * 0.005) * 0.15;
+    const radius = (cellSize / 2 - 1) * pulse;
+
+    // Outer star-burst glow
+    const glow = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 2.2);
+    glow.addColorStop(0, 'rgba(255, 215, 64, 0.5)');
+    glow.addColorStop(0.5, 'rgba(255, 180, 0, 0.2)');
+    glow.addColorStop(1, 'rgba(255, 215, 64, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(pos.x * cellSize - cellSize * 0.6, pos.y * cellSize - cellSize * 0.6, cellSize * 2.2, cellSize * 2.2);
+
+    // Gold body
+    const grad = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, radius);
+    grad.addColorStop(0, '#fff176');
+    grad.addColorStop(0.5, '#ffd740');
+    grad.addColorStop(1, '#ff8f00');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Star highlight ring
+    ctx.strokeStyle = 'rgba(255, 255, 200, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.65, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  /**
+   * Blue food: +20 pts, speed debuff. Cyan circle with slower pulse.
+   * @param {{x: number, y: number}} pos
+   * @param {number} timestamp
+   */
+  _drawBlueFood(pos, timestamp) {
+    const { ctx, cellSize } = this;
+    const cx = pos.x * cellSize + cellSize / 2;
+    const cy = pos.y * cellSize + cellSize / 2;
+    // Slower, calmer pulse
+    const pulse = 1 + Math.sin(timestamp * 0.002) * 0.08;
+    const radius = (cellSize / 2 - 2) * pulse;
+
+    // Cyan glow
+    const glow = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius * 2.0);
+    glow.addColorStop(0, 'rgba(0, 229, 255, 0.4)');
+    glow.addColorStop(1, 'rgba(0, 229, 255, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(pos.x * cellSize - cellSize * 0.5, pos.y * cellSize - cellSize * 0.5, cellSize * 2.0, cellSize * 2.0);
+
+    // Blue body
+    const grad = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, radius);
+    grad.addColorStop(0, '#80d8ff');
+    grad.addColorStop(1, '#0091ea');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -159,7 +241,7 @@ export class Renderer {
 
   /**
    * Render all active particle/popup effects.
-   * Each effect: { type, x, y, startTime, duration }
+   * Each effect: { type, foodType, value, x, y, startTime, duration }
    * @param {Array} effects
    * @param {number} currentTime
    */
@@ -170,13 +252,15 @@ export class Renderer {
         this._drawFoodEatenEffect(fx, progress);
       } else if (fx.type === 'scorePopup') {
         this._drawScorePopup(fx, progress);
+      } else if (fx.type === 'debuffActive') {
+        this._drawDebuffIndicator(fx, progress);
       }
     });
   }
 
   /**
-   * Expanding ring effect when food is eaten.
-   * @param {{x: number, y: number}} fx
+   * Expanding ring effect when food is eaten. Color tinted by food type.
+   * @param {object} fx
    * @param {number} progress 0→1
    */
   _drawFoodEatenEffect(fx, progress) {
@@ -185,19 +269,25 @@ export class Renderer {
     const cy = fx.y * cellSize + cellSize / 2;
     const alpha = 1 - progress;
 
+    const color = fx.foodType === 'golden'
+      ? `255, 215, 64`
+      : fx.foodType === 'blue'
+        ? `0, 229, 255`
+        : `0, 230, 118`;
+
     for (let i = 0; i < 2; i++) {
       const r = cellSize * (0.4 + progress * 0.9 + i * 0.35);
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(0, 230, 118, ${alpha * (0.9 - i * 0.4)})`;
+      ctx.strokeStyle = `rgba(${color}, ${alpha * (0.9 - i * 0.4)})`;
       ctx.lineWidth = 2 - i * 0.5;
       ctx.stroke();
     }
   }
 
   /**
-   * Floating "+10" score text that drifts up and fades.
-   * @param {{x: number, y: number}} fx
+   * Floating score text that drifts up and fades. Value and color per food type.
+   * @param {object} fx
    * @param {number} progress 0→1
    */
   _drawScorePopup(fx, progress) {
@@ -205,12 +295,39 @@ export class Renderer {
     const x = fx.x * cellSize + cellSize / 2;
     const y = fx.y * cellSize - progress * cellSize * 1.8;
     const alpha = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
+    const value = fx.value || 10;
 
-    ctx.fillStyle = `rgba(0, 230, 118, ${alpha})`;
-    ctx.font = `bold 15px monospace`;
+    if (fx.foodType === 'golden') {
+      ctx.fillStyle = `rgba(255, 215, 64, ${alpha})`;
+      ctx.font = `bold 18px monospace`;
+    } else if (fx.foodType === 'blue') {
+      ctx.fillStyle = `rgba(0, 229, 255, ${alpha})`;
+      ctx.font = `bold 14px monospace`;
+    } else {
+      ctx.fillStyle = `rgba(0, 230, 118, ${alpha})`;
+      ctx.font = `bold 15px monospace`;
+    }
+
     ctx.textAlign = 'center';
-    ctx.fillText('+10', x, y);
+    ctx.fillText(`+${value}`, x, y);
     ctx.textAlign = 'left';
+  }
+
+  /**
+   * Brief blue flash on the snake head when speed debuff activates.
+   * @param {object} fx
+   * @param {number} progress 0→1
+   */
+  _drawDebuffIndicator(fx, progress) {
+    const { ctx, cellSize } = this;
+    const cx = fx.x * cellSize + cellSize / 2;
+    const cy = fx.y * cellSize + cellSize / 2;
+    const alpha = (1 - progress) * 0.45;
+    const r = cellSize * (0.8 + progress * 0.6);
+    ctx.fillStyle = `rgba(0, 145, 234, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   /** @private */

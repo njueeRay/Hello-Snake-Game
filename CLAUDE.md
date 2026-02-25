@@ -100,5 +100,5 @@ npx serve .
 - [x] 难度选择（Easy / Normal / Hard）
 - [x] 开源文档（README + LICENSE + CONTRIBUTING + Issue Templates）
 - [x] GitHub Pages 自动部署（GitHub Actions）
+- [x] 特殊食物类型（Golden +50分无增长8s失效 / Blue +20分速度debuff）
 - [ ] 障碍物模式（可选）
-- [ ] 特殊食物类型（可选）
