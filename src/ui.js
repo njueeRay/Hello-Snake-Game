@@ -22,6 +22,8 @@ export class UI {
     this.leaderboardBody  = document.getElementById('leaderboardBody');
     this.newRecordBadge   = document.getElementById('newRecordBadge');
     this.gameOverLbBody   = document.getElementById('gameOverLbBody');
+    this.timerItem        = document.getElementById('timerItem');
+    this.timerDisplay     = document.getElementById('timerDisplay');
 
     ['scoreDisplay','levelDisplay','highScoreDisplay','finalScore','finalHighScore',
      'victoryScore','pauseScore','startOverlay','gameOverOverlay','victoryOverlay','pauseOverlay',
@@ -177,7 +179,8 @@ export class UI {
 
       const tdDiff = document.createElement('td');
       tdDiff.className = `lb-difficulty lb-difficulty--${e.difficulty}`;
-      tdDiff.textContent = e.difficulty.toUpperCase();
+      const modeLabel = (e.mode || 'classic') === 'timeattack' ? 'TIME ATK' : 'CLASSIC';
+      tdDiff.textContent = modeLabel;
 
       const tdDate = document.createElement('td');
       tdDate.className = 'lb-date';
@@ -189,5 +192,24 @@ export class UI {
       tr.appendChild(tdDate);
       tbody.appendChild(tr);
     });
+  }
+
+  /**
+   * Update the countdown timer HUD (visible only in Time Attack mode).
+   * @param {number} ms - milliseconds remaining
+   * @param {string} mode - 'classic' | 'timeattack'
+   */
+  updateTimer(ms, mode) {
+    if (!this.timerItem || !this.timerDisplay) return;
+    if (mode !== 'timeattack') {
+      this.timerItem.classList.add('score-item--hidden');
+      return;
+    }
+    this.timerItem.classList.remove('score-item--hidden');
+    const secs = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(secs / 60);
+    const s = String(secs % 60).padStart(2, '0');
+    this.timerDisplay.textContent = `${m}:${s}`;
+    this.timerDisplay.classList.toggle('timer-value--warning', secs <= 10);
   }
 }

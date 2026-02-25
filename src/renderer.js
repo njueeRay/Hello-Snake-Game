@@ -1,3 +1,30 @@
+const SNAKE_SKINS = {
+  classic: {
+    headColor: '#00e676',
+    bodyFrom: { r: 0,   g: 200, b: 100 },
+    bodyTo:   { r: 0,   g: 100, b: 160 },
+    eyeColor: '#1a1a2e',
+  },
+  cyber: {
+    headColor: '#00e5ff',
+    bodyFrom: { r: 0,   g: 229, b: 255 },
+    bodyTo:   { r: 0,   g: 91,  b: 187 },
+    eyeColor: '#ffffff',
+  },
+  neon: {
+    headColor: '#e040fb',
+    bodyFrom: { r: 224, g: 64,  b: 251 },
+    bodyTo:   { r: 170, g: 0,   b: 255 },
+    eyeColor: '#ffffff',
+  },
+  golden: {
+    headColor: '#ffd740',
+    bodyFrom: { r: 255, g: 215, b: 64  },
+    bodyTo:   { r: 255, g: 143, b: 0   },
+    eyeColor: '#1a1a2e',
+  },
+};
+
 export class Renderer {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -51,37 +78,42 @@ export class Renderer {
   /**
    * Draw the snake with a distinguished head and gradient body.
    * @param {Array<{x: number, y: number}>} body
+   * @param {string} [skinKey='classic']
    */
-  drawSnake(body) {
+  drawSnake(body, skinKey = 'classic') {
+    if (!body || body.length === 0) return;
+    const skin = SNAKE_SKINS[skinKey] || SNAKE_SKINS.classic;
     const { ctx, cellSize } = this;
     const pad = 1;
-
     body.forEach((seg, index) => {
       const px = seg.x * cellSize + pad;
       const py = seg.y * cellSize + pad;
       const size = cellSize - pad * 2;
       const radius = index === 0 ? 6 : 4;
-
       if (index === 0) {
-        ctx.fillStyle = '#00e676';
+        ctx.fillStyle = skin.headColor;
       } else {
         const t = index / Math.max(body.length - 1, 1);
-        ctx.fillStyle = `rgb(0, ${Math.round(200 - t * 100)}, ${Math.round(100 + t * 60)})`;
+        const { r: r1, g: g1, b: b1 } = skin.bodyFrom;
+        const { r: r2, g: g2, b: b2 } = skin.bodyTo;
+        const r = Math.round(r1 + (r2 - r1) * t);
+        const g = Math.round(g1 + (g2 - g1) * t);
+        const b = Math.round(b1 + (b2 - b1) * t);
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       }
-
       this._roundRect(px, py, size, size, radius);
       ctx.fill();
     });
-
-    this._drawEyes(body[0], body);
+    this._drawEyes(body[0], body, skin.eyeColor);
   }
 
   /**
    * Draw two eyes on the head segment, direction-aware.
    * @param {{x: number, y: number}} head
    * @param {Array<{x: number, y: number}>} body
+   * @param {string} [eyeColor='#1a1a2e']
    */
-  _drawEyes(head, body) {
+  _drawEyes(head, body, eyeColor = '#1a1a2e') {
     const { ctx, cellSize } = this;
     const cx = head.x * cellSize + cellSize / 2;
     const cy = head.y * cellSize + cellSize / 2;
@@ -96,7 +128,7 @@ export class Renderer {
       dy = head.y - body[1].y;
     }
 
-    ctx.fillStyle = '#1a1a2e';
+    ctx.fillStyle = eyeColor;
     ctx.beginPath();
     ctx.arc(cx + dx * fwd - dy * perp, cy + dy * fwd + dx * perp, eyeRadius, 0, Math.PI * 2);
     ctx.fill();
@@ -391,3 +423,5 @@ export class Renderer {
     ctx.closePath();
   }
 }
+
+export { SNAKE_SKINS };

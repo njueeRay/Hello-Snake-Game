@@ -25,6 +25,10 @@
         <span class="score-label">COMBO</span>
         <span class="combo-value" id="comboDisplay">×1</span>
       </div>
+      <div class="score-item score-item--hidden" id="timerItem">
+        <span class="score-label">TIME</span>
+        <span class="timer-value" id="timerDisplay">1:00</span>
+      </div>
     </div>
 
     <div class="canvas-wrapper">
@@ -36,10 +40,31 @@
       <div class="overlay" id="startOverlay">
         <div class="overlay-content">
           <h1 class="overlay-title">SNAKE</h1>
+          <div class="skin-selection">
+            <p class="sub-title">SKIN</p>
+            <div class="skin-buttons">
+              <button class="btn-skin" data-skin="classic" title="Classic">
+                <div class="skin-preview skin-preview--classic"></div>
+              </button>
+              <button class="btn-skin" data-skin="cyber" title="Cyber">
+                <div class="skin-preview skin-preview--cyber"></div>
+              </button>
+              <button class="btn-skin" data-skin="neon" title="Neon">
+                <div class="skin-preview skin-preview--neon"></div>
+              </button>
+              <button class="btn-skin" data-skin="golden" title="Golden">
+                <div class="skin-preview skin-preview--golden"></div>
+              </button>
+            </div>
+          </div>
+          <div class="mode-buttons">
+            <button class="btn-mode btn-mode--active" data-mode-select="classic">CLASSIC</button>
+            <button class="btn-mode" data-mode-select="timeattack">TIME ATTACK</button>
+          </div>
           <div class="difficulty-buttons">
-            <button class="btn-difficulty btn-difficulty--easy" data-difficulty="easy">EASY</button>
-            <button class="btn-difficulty btn-difficulty--normal btn-difficulty--active" data-difficulty="normal">NORMAL</button>
-            <button class="btn-difficulty btn-difficulty--hard" data-difficulty="hard">HARD</button>
+            <button class="btn-difficulty btn-difficulty--easy" data-difficulty="easy" data-mode="classic">EASY</button>
+            <button class="btn-difficulty btn-difficulty--normal btn-difficulty--active" data-difficulty="normal" data-mode="classic">NORMAL</button>
+            <button class="btn-difficulty btn-difficulty--hard" data-difficulty="hard" data-mode="classic">HARD</button>
           </div>
           <p class="overlay-hint">Click a mode · or Space for Normal</p>
           <button class="btn-leaderboard" id="leaderboardButton">🏆 TOP 10</button>

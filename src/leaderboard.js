@@ -13,7 +13,7 @@ export class Leaderboard {
 
   /**
    * Add a new result. Returns the 1-based rank (1=best), or null if not in top-10.
-   * @param {{score:number, level:number, difficulty:string, maxCombo:number}} data
+   * @param {{score:number, level:number, difficulty:string, maxCombo:number, mode:string}} data
    * @returns {number|null}
    */
   add(data) {
@@ -22,6 +22,7 @@ export class Leaderboard {
       level:      data.level,
       difficulty: data.difficulty,
       maxCombo:   data.maxCombo,
+      mode:       data.mode || 'classic',
       date:       new Date().toLocaleDateString(),
     };
     this._entries.push(entry);

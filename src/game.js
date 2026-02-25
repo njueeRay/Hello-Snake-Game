@@ -1,6 +1,6 @@
 import { Snake } from './snake.js';
 import { Food } from './food.js';
-import { Renderer } from './renderer.js';
+import { Renderer, SNAKE_SKINS } from './renderer.js';
 import { UI } from './ui.js';
 import { AudioSystem } from './audio.js';
 import { Obstacles } from './obstacles.js';
@@ -34,7 +34,10 @@ const EFFECT_SCORE_POPUP_DURATION = 800;
 const EFFECT_DEBUFF_DURATION = 500;
 
 const LS_KEY_HIGH_SCORE = 'snakeHighScore';
+const LS_KEY_SKIN = 'snakeSkin';
 const SWIPE_THRESHOLD = 20;
+
+const TIME_ATTACK_MS = 60000;
 
 /** 连击窗口：吃完食物后N格移动内吃到下一个食物则连击 */
 const COMBO_WINDOW_TICKS = 25;
@@ -88,10 +91,16 @@ class Game {
 
     // Combo & leaderboard
     this.leaderboard   = new Leaderboard();
+    this.snakeSkin     = this._loadSkin();
     this._combo        = 0;
     this._maxCombo     = 0;
     this._ticksSinceFd = 0;   // ticks elapsed since last food eaten
     this._gameStartMs  = 0;   // Date.now() when game started
+
+    // Game mode
+    this.gameMode = { type: 'classic', allowGrowth: true };
+    this.timerRemaining = 0;
+    this._lastFrameTs = 0;
 
     this._bindInput();
     this._bindTouchInput();
@@ -102,13 +111,53 @@ class Game {
   _drawIdleScreen() {
     this.renderer.clear();
     this.renderer.drawGrid(0);
+    this.renderer.drawSnake(
+      [{ x: 15, y: 15 }, { x: 14, y: 15 }, { x: 13, y: 15 }, { x: 12, y: 15 }],
+      this.snakeSkin
+    );
   }
 
-  /** @param {'easy'|'normal'|'hard'} key */
-  startWithDifficulty(key) {
-    this.difficulty = key;
+  /** @param {'easy'|'normal'|'hard'} difficulty */
+  startClassic(difficulty) {
+    this.difficulty = difficulty;
+    this.gameMode = { type: 'classic', allowGrowth: true };
+    this.timerRemaining = 0;
     this._updateActiveDifficultyButton();
+    this._startGame();
+  }
+
+  /** @param {'easy'|'normal'|'hard'} difficulty */
+  startTimeAttack(difficulty) {
+    this.difficulty = difficulty;
+    this.gameMode = { type: 'timeattack', allowGrowth: false };
+    this.timerRemaining = TIME_ATTACK_MS;
+    this._updateActiveDifficultyButton();
+    this._startGame();
+  }
+
+  _startGame() {
     this.start();
+  }
+
+  _loadSkin() {
+    try {
+      const s = localStorage.getItem(LS_KEY_SKIN);
+      return SNAKE_SKINS[s] ? s : 'classic';
+    } catch { return 'classic'; }
+  }
+
+  setSkin(key) {
+    if (!SNAKE_SKINS[key]) return;
+    this.snakeSkin = key;
+    try { localStorage.setItem(LS_KEY_SKIN, key); } catch {}
+    this._updateActiveSkinButton();
+    if (this.state === 'idle') this._drawIdleScreen();
+  }
+
+  _updateActiveSkinButton() {
+    document.querySelectorAll('[data-skin]').forEach((btn) =>
+      btn.classList.toggle('btn-skin--active', btn.dataset.skin === this.snakeSkin)
+    );
   }
 
   start() {
@@ -141,11 +190,27 @@ class Game {
     this.ui.hidePause();
 
     this.state = 'playing';
+    this._lastFrameTs = 0;
+    this.ui.updateTimer(this.timerRemaining, this.gameMode.type);
     this.animFrameId = requestAnimationFrame((ts) => this._loop(ts));
   }
 
   _loop(timestamp) {
     if (this.state !== 'playing') return;
+
+    // Time Attack countdown
+    if (this.gameMode.type === 'timeattack') {
+      if (this._lastFrameTs > 0) {
+        this.timerRemaining -= (timestamp - this._lastFrameTs);
+        this.ui.updateTimer(this.timerRemaining, 'timeattack');
+        if (this.timerRemaining <= 0) {
+          this.timerRemaining = 0;
+          this._gameOver();
+          return;
+        }
+      }
+    }
+    this._lastFrameTs = timestamp;
 
     this.currentTime = timestamp;
     if (this.lastTickTime === 0) this.lastTickTime = timestamp;
@@ -201,8 +266,8 @@ class Game {
       const { type } = this.food;
       const pts = FOOD_POINTS[type] ?? 10;
 
-      // Golden food doesn't grow the snake
-      if (type !== 'golden') {
+      // Golden food / Time Attack mode: no growth
+      if (this.gameMode.allowGrowth && type !== 'golden') {
         this.snake.grow();
       }
 
@@ -311,7 +376,7 @@ class Game {
     this.renderer.drawObstacles(this.obstacles.getPositions());
     this.renderer.drawFood(this.food, timestamp);
     this.renderer.drawEffects(this.effects, timestamp);
-    this.renderer.drawSnake(this.snake.body);
+    this.renderer.drawSnake(this.snake.body, this.snakeSkin);
   }
 
   _gameOver() {
@@ -329,11 +394,13 @@ class Game {
       level:      this.level,
       difficulty: this.difficulty,
       maxCombo:   this._maxCombo,
+      mode:       this.gameMode.type,
     });
     this.ui.showGameOver(this.score, this.highScore, this.leaderboard.getAll(), rank);
   }
 
   _gameWon() {
+    if (this.gameMode.type === 'timeattack') return;
     this._saveHighScore();
     this.state = 'won';
     if (this.animFrameId) {
@@ -347,6 +414,7 @@ class Game {
       level:      this.level,
       difficulty: this.difficulty,
       maxCombo:   this._maxCombo,
+      mode:       this.gameMode.type,
     });
     this.ui.showVictory(this.score, this.highScore, rank);
   }
@@ -372,6 +440,7 @@ class Game {
     if (this.state !== 'paused') return;
     this.state = 'playing';
     this.lastTickTime = 0;
+    this._lastFrameTs = 0;
     this.ui.hidePause();
     this.animFrameId = requestAnimationFrame((ts) => this._loop(ts));
   }
@@ -441,9 +510,9 @@ class Game {
 
   _handleSpace() {
     switch (this.state) {
-      case 'idle':     this.start();    break;
+      case 'idle':     this.startClassic(this.difficulty);    break;
       case 'gameover':
-      case 'won':      this.start();    break;
+      case 'won':      this.startClassic(this.difficulty);    break;
       case 'playing':  this._pause();   break;
       case 'paused':   this._resume();  break;
       default: break;
@@ -451,9 +520,26 @@ class Game {
   }
 
   _bindDifficultyButtons() {
+    // Mode toggle buttons — update data-mode on difficulty buttons
+    document.querySelectorAll('[data-mode-select]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.modeSelect;
+        document.querySelectorAll('[data-difficulty]').forEach((b) => { b.dataset.mode = m; });
+        document.querySelectorAll('[data-mode-select]').forEach((b) =>
+          b.classList.toggle('btn-mode--active', b.dataset.modeSelect === m)
+        );
+      });
+    });
+    // Difficulty buttons — route to classic or time attack start
     document.querySelectorAll('[data-difficulty]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        this.startWithDifficulty(btn.dataset.difficulty);
+        const d = btn.dataset.difficulty;
+        const m = btn.dataset.mode || 'classic';
+        if (m === 'timeattack') {
+          this.startTimeAttack(d);
+        } else {
+          this.startClassic(d);
+        }
       });
     });
     const muteBtn = document.getElementById('muteButton');
@@ -476,6 +562,10 @@ class Game {
       abandonBtn.addEventListener('click', () => this._abandon());
     }
     this._updateActiveDifficultyButton();
+    document.querySelectorAll('[data-skin]').forEach((btn) =>
+      btn.addEventListener('click', () => this.setSkin(btn.dataset.skin))
+    );
+    this._updateActiveSkinButton();
   }
 
   _updateActiveDifficultyButton() {
