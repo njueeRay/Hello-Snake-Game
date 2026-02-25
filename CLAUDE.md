@@ -10,6 +10,7 @@
 Snake/
 ├── CLAUDE.md                 ← 本文件，项目核心规范
 ├── README.md                 ← 开源门面（徽章、功能、上手指南）
+├── CHANGELOG.md              ← 版本变更日志
 ├── LICENSE                   ← MIT License
 ├── CONTRIBUTING.md           ← 贡献指南
 ├── .gitignore
@@ -17,14 +18,17 @@ Snake/
 │   ├── workflows/deploy.yml  ← GitHub Pages 自动部署
 │   └── ISSUE_TEMPLATE/       ← Bug report / Feature request 模板
 ├── .claude/                  ← Claude Code 配置
-│   ├── settings.json         ← 权限控制
+│   ├── settings.json         ← 权限控制（Bash(*) + deny 危险命令）
 │   ├── agents/               ← 专项 AI 团队
 │   └── commands/             ← 自定义斜杠命令
+├── docs/
+│   └── meetings/             ← 团队会议纪要
 ├── index.html                ← 游戏入口页面
 ├── src/
 │   ├── game.js               ← 游戏核心逻辑 + 状态机
 │   ├── snake.js              ← 蛇的实体与行为
-│   ├── food.js               ← 食物生成逻辑
+│   ├── food.js               ← 食物生成逻辑（type/expireAt/spawnedAt）
+│   ├── obstacles.js          ← 障碍物生成（Level 3+，可扩展 PATTERNS）
 │   ├── renderer.js           ← Canvas 渲染层
 │   ├── ui.js                 ← DOM 界面交互
 │   └── audio.js              ← Web Audio API 音效合成
@@ -88,6 +92,8 @@ npx serve .
 
 ## 当前阶段
 
+### v1.0.0（已发版）
+
 - [x] Claude Code 配置工程（基础设施）
 - [x] 游戏核心实现（蛇、食物、碰撞检测）
 - [x] 渲染层（Canvas 绘制）
@@ -103,3 +109,22 @@ npx serve .
 - [x] 特殊食物类型（Golden +50分无增长8s失效 / Blue +20分速度debuff）
 - [x] 障碍物模式（Level 3 开启，每升级 +2 块，上限 12，撞障碍物即死）
 - [x] v1.0.0 发版（CHANGELOG、README 更新、git tag、代码评审修复）
+
+### v2.0 规划（进行中）
+
+Sprint 5 — 深度体验（P0）：
+- [ ] 本地 Top-10 排行榜（localStorage，含时间戳/难度）
+- [ ] 连击/倍数系统（combo counter，1x→3x 倍数，特效显示）
+- [ ] 暂停界面增强（统计信息 + 放弃本局按钮）
+
+Sprint 6 — 玩法扩展（P0+P1）：
+- [ ] 限时模式 Time Attack（60s 倒计时，不增长，纯分速）
+- [ ] 蛇皮肤选择（4 种颜色方案，localStorage 记忆）
+- [ ] 结构化障碍物图案（预定义 pattern 替代纯随机）
+
+Sprint 7 — 氛围打磨（P2）：
+- [ ] 背景音乐（oscillator 环境音循环，随速度变调）
+- [ ] 技术债清理（renderer 常量化、game.js 模块拆分评估）
+- [ ] v2.0.0 发版
+
+> 参见 `docs/meetings/2026-02-25-v2-planning.md` 获取完整规划纪要。

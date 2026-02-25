@@ -132,11 +132,17 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 **v1.0.0 — Released** ✅
 
-Future ideas (community contributions welcome):
-- [ ] Online leaderboard
+**v2.0 — In Planning** 🚧
+
+| Sprint | Features |
+|--------|---------|
+| Sprint 5 (Depth) | Local Top-10 leaderboard · Combo/multiplier system · Enhanced pause menu |
+| Sprint 6 (Variety) | Time Attack mode · Snake skin selector · Structured obstacle patterns |
+| Sprint 7 (Polish) | Background music · Code quality cleanup · v2.0.0 release |
+
+**v2.x — Future:**
+- [ ] Online leaderboard (requires backend)
 - [ ] Two-player mode (split keyboard)
-- [ ] Custom snake skins / color themes
-- [ ] Combo score multiplier system
 
 ## 📄 License
 
