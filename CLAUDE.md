@@ -117,10 +117,10 @@ Sprint 5 — 深度体验（P0）：✅ 已完成
 - [x] 连击/倍数系统（combo counter，1x→3x 倍数，特效显示）
 - [x] 暂停界面增强（统计信息 + 放弃本局按钮）
 
-Sprint 6 — 玩法扩展（P0+P1）：
-- [ ] 限时模式 Time Attack（60s 倒计时，不增长，纯分速）
-- [ ] 蛇皮肤选择（4 种颜色方案，localStorage 记忆）
-- [ ] 结构化障碍物图案（预定义 pattern 替代纯随机）
+Sprint 6 — 玩法扩展（P0+P1）：✅ 已完成
+- [x] 限时模式 Time Attack（60s 倒计时，不增长，纯分速）
+- [x] 蛇皮肤选择（4 种颜色方案，localStorage 记忆）
+- [x] 结构化障碍物图案（预定义 pattern 替代纯随机）
 
 Sprint 7 — 氛围打磨（P2）：
 - [ ] 背景音乐（oscillator 环境音循环，随速度变调）

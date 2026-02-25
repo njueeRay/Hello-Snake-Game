@@ -53,15 +53,47 @@ First stable release. All planned v1.0 features complete.
 
 ## [Unreleased] — v2.0 in progress
 
-### Sprint 6 planned
-- Time Attack mode (60 s countdown, fixed snake length)
-- Snake skin selector (4 color schemes, localStorage memory)
-- Structured obstacle patterns (predefined shapes replacing pure random)
-
 ### Sprint 7 planned
 - Background music (oscillator ambient loop, tempo-coupled to speed)
 - Tech debt: renderer magic-number constants, game.js module split evaluation
 - v2.0.0 release
+
+---
+
+## [2.0-sprint6] — 2026-02-25
+
+### Added
+- **Time Attack Mode** — new mode selector (CLASSIC / TIME ATTACK) on start
+  screen; 60 s countdown shown in HUD (`#timerItem`); snake does not grow
+  when eating food; timer freezes on pause and resumes without delta jump;
+  ≤10 s triggers red pulsing warning; game ends when timer hits 0:00
+- **Snake Skin Selector** — 4 color schemes (Classic/Cyber/Neon/Golden)
+  selectable from start screen; selected skin previewed on idle canvas;
+  persisted to `localStorage` (`snakeSkin`); renderer fully parameterised
+  with per-skin head color, body RGB gradient, and eye color
+- **Structured Obstacle Patterns** — 6 predefined shapes (cross, L-shape,
+  horizontal line, vertical line, 2×2 square, 3-dot trio); placed at random
+  valid origins with up to 50 retry attempts; Level 3–5 places 1 pattern,
+  Level 6+ places 2; falls back to random scatter if placement fails
+
+### Technical
+- `src/renderer.js` — `SNAKE_SKINS` constant exported; `drawSnake(body,
+  skinKey)` and `_drawEyes(head, body, eyeColor)` parameterised
+- `src/game.js` — `startClassic()` / `startTimeAttack()` replace
+  `startWithDifficulty()`; `gameMode` config object `{type, allowGrowth}`;
+  `TIME_ATTACK_MS` constant; timer decrement via `_lastFrameTs` frame delta
+  in `_loop()`; `_resume()` resets `_lastFrameTs`; grow guard checks
+  `gameMode.allowGrowth`; leaderboard entries include `mode` field;
+  `_gameWon()` guarded for time-attack; mode-select button binding
+- `src/ui.js` — `updateTimer(ms, mode)` method; leaderboard Mode column
+  shows CLASSIC/TIME ATK (with legacy `mode` fallback)
+- `src/leaderboard.js` — entry schema adds `mode: data.mode || 'classic'`
+- `src/obstacles.js` — full rewrite; `PATTERNS` object; `_tryPlacePattern()`
+  with bounds + occupation validation; `MAX_PATTERN_ATTEMPTS = 50`
+- `index.html` — `#timerItem` HUD slot; mode-select buttons; `data-mode`
+  attrs on difficulty buttons; skin-selection block (no inline styles)
+- `style.css` — timer styles + `@keyframes timer-blink`; mode button styles;
+  skin selector + 4 gradient preview classes
 
 ---
 
