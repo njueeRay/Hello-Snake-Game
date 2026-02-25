@@ -3,6 +3,7 @@ import { Food } from './food.js';
 import { Renderer } from './renderer.js';
 import { UI } from './ui.js';
 import { AudioSystem } from './audio.js';
+import { Obstacles } from './obstacles.js';
 
 const CANVAS_SIZE = 600;
 const CELL_SIZE = 20;
@@ -67,6 +68,7 @@ class Game {
     this.animFrameId = null;
     this.currentTime = 0;
     this.effects = [];
+    this.obstacles = null;
 
     /** Extra ms added to tick interval while blue debuff is active. */
     this.speedDebuff = 0;
@@ -95,9 +97,7 @@ class Game {
 
     this.snake = new Snake(Math.floor(GRID_SIZE / 2), Math.floor(GRID_SIZE / 2));
     this.food = new Food(GRID_SIZE, GRID_SIZE);
-    this.food.spawn(this.snake.body);
-    this._setFoodExpiry();
-
+    this.obstacles = new Obstacles(GRID_SIZE, GRID_SIZE);
     this.score = 0;
     this.level = 1;
     this.foodEaten = 0;
@@ -106,6 +106,9 @@ class Game {
     this.effects = [];
     this.speedDebuff = 0;
     this.speedDebuffUntil = null;
+    this.food.spawn(this.snake.body, []);
+    this._setFoodExpiry();
+    this.obstacles.generate(this.level, [...this.snake.body, this.food.position]);
 
     this.ui.updateScore(0);
     this.ui.updateLevel(1);
@@ -135,7 +138,7 @@ class Game {
 
     // Expire timed special food (respawn if not eaten in time)
     if (this.food.expireAt !== null && timestamp >= this.food.expireAt) {
-      this.food.spawn(this.snake.body);
+      this.food.spawn(this.snake.body, this.obstacles.getPositions());
       this._setFoodExpiry();
     }
 
@@ -154,7 +157,8 @@ class Game {
 
     if (
       this.snake.checkWallCollision(GRID_SIZE, GRID_SIZE) ||
-      this.snake.checkSelfCollision()
+      this.snake.checkSelfCollision() ||
+      this.obstacles.checkCollision(this.snake.head.x, this.snake.head.y)
     ) {
       this._gameOver();
       return;
@@ -213,7 +217,7 @@ class Game {
         duration: EFFECT_SCORE_POPUP_DURATION,
       });
 
-      this.food.spawn(this.snake.body);
+      this.food.spawn(this.snake.body, this.obstacles.getPositions());
       this._setFoodExpiry();
 
       if (this.food.position.x === -1) {
@@ -241,12 +245,17 @@ class Game {
       this.level = newLevel;
       this.ui.updateLevel(this.level);
       this.audio.playLevelUp();
+      this.obstacles.generate(this.level, [
+        ...this.snake.body,
+        this.food.position,
+      ]);
     }
   }
 
   _render(timestamp = 0) {
     this.renderer.clear();
     this.renderer.drawGrid(this.score);
+    this.renderer.drawObstacles(this.obstacles.getPositions());
     this.renderer.drawFood(this.food, timestamp);
     this.renderer.drawEffects(this.effects, timestamp);
     this.renderer.drawSnake(this.snake.body);

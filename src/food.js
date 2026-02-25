@@ -20,8 +20,9 @@ export class Food {
    * Uses free-cell enumeration to guarantee uniform distribution and termination.
    * @param {Array<{x: number, y: number}>} snakeBody
    */
-  spawn(snakeBody) {
+  spawn(snakeBody, obstacles = []) {
     const occupied = new Set(snakeBody.map((seg) => `${seg.x},${seg.y}`));
+    obstacles.forEach((ob) => occupied.add(`${ob.x},${ob.y}`));
 
     const freeCells = [];
     for (let x = 0; x < this.gridWidth; x++) {

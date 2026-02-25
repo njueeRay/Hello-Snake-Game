@@ -106,6 +106,36 @@ export class Renderer {
   }
 
   /**
+   * Draw obstacle cells as dark brick tiles.
+   * @param {Array<{x: number, y: number}>} obstacles
+   */
+  drawObstacles(obstacles) {
+    const { ctx } = this;
+    const pad = 1;
+
+    obstacles.forEach((ob) => {
+      const px = ob.x * this.cellSize + pad;
+      const py = ob.y * this.cellSize + pad;
+      const size = this.cellSize - pad * 2;
+
+      ctx.fillStyle = '#3a3a4a';
+      ctx.fillRect(px, py, size, size);
+
+      ctx.strokeStyle = '#555566';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(px, py, size, size);
+
+      // Horizontal mid-line texture
+      ctx.strokeStyle = '#2a2a3a';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(px, py + size / 2);
+      ctx.lineTo(px + size, py + size / 2);
+      ctx.stroke();
+    });
+  }
+
+  /**
    * Dispatch food rendering to the correct type-specific method.
    * @param {import('./food.js').Food} food
    * @param {number} [timestamp=0]
