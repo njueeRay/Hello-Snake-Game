@@ -112,10 +112,10 @@ npx serve .
 
 ### v2.0 规划（进行中）
 
-Sprint 5 — 深度体验（P0）：
-- [ ] 本地 Top-10 排行榜（localStorage，含时间戳/难度）
-- [ ] 连击/倍数系统（combo counter，1x→3x 倍数，特效显示）
-- [ ] 暂停界面增强（统计信息 + 放弃本局按钮）
+Sprint 5 — 深度体验（P0）：✅ 已完成
+- [x] 本地 Top-10 排行榜（localStorage，含时间戳/难度）
+- [x] 连击/倍数系统（combo counter，1x→3x 倍数，特效显示）
+- [x] 暂停界面增强（统计信息 + 放弃本局按钮）
 
 Sprint 6 — 玩法扩展（P0+P1）：
 - [ ] 限时模式 Time Attack（60s 倒计时，不增长，纯分速）

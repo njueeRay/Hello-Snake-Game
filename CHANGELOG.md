@@ -51,12 +51,53 @@ First stable release. All planned v1.0 features complete.
 
 ---
 
-## [Unreleased]
+## [Unreleased] — v2.0 in progress
 
-- Online leaderboard
-- Two-player mode (split keyboard)
-- Custom snake skins / color themes
-- Combo score multiplier system
+### Sprint 6 planned
+- Time Attack mode (60 s countdown, fixed snake length)
+- Snake skin selector (4 color schemes, localStorage memory)
+- Structured obstacle patterns (predefined shapes replacing pure random)
+
+### Sprint 7 planned
+- Background music (oscillator ambient loop, tempo-coupled to speed)
+- Tech debt: renderer magic-number constants, game.js module split evaluation
+- v2.0.0 release
+
+---
+
+## [2.0-sprint5] — 2026-02-25
+
+### Added
+- **Local Top-10 Leaderboard** — `src/leaderboard.js` new module; stores
+  `{score, level, difficulty, maxCombo, date}` in `localStorage`
+  (`snakeLeaderboard`); `add()` returns 1-based rank; displayed in-game-over
+  overlay (top 5) and via dedicated "🏆 TOP 10" button on start screen
+- **Combo / Multiplier System** — consecutive food eaten within 25 ticks
+  builds a combo counter; score multipliers: ×1.5 (combo 3+), ×2 (combo 6+),
+  ×3 (combo 10+); combo HUD element shown/hidden by tier; `comboFlash` canvas
+  effect shows multiplier label on tier change; max-combo tracked per game and
+  saved to leaderboard
+- **Enhanced Pause Menu** — pause overlay now shows: current score, level,
+  difficulty, elapsed time, max combo; "Abandon Game" button returns to start
+  screen with full resource cleanup
+- **New-Record Badge** — animated badge appears in game-over overlay when the
+  player achieves a leaderboard rank
+
+### Technical
+- `src/leaderboard.js` — new `Leaderboard` class with `add()` / `getAll()`;
+  sorted desc by score, capped at 10 entries
+- `src/game.js` — `COMBO_WINDOW_TICKS`, `COMBO_MULTIPLIERS` constants; new
+  fields `_combo`, `_maxCombo`, `_ticksSinceFd`, `_gameStartMs`; `_abandon()`
+  fixed with complete null cleanup of `snake/food/obstacles/effects`
+- `src/ui.js` — `updateCombo()`, `showLeaderboard()` / `hideLeaderboard()`;
+  `_renderLeaderboardRows()` uses `createElement` (no `innerHTML`); `showPause()`
+  accepts stats object; `showGameOver()` / `showVictory()` accept rank param
+- `src/renderer.js` — `comboFlash` branch in `drawEffects()`: alpha-fade +
+  scale-grow animation centred on canvas
+- `index.html` — `#comboItem` HUD slot; `#leaderboardButton`; `#newRecordBadge`;
+  `#gameOverLbBody`; enhanced pause overlay stats grid; `#leaderboardOverlay`
+- `style.css` — combo tier colours (mid/high/max), pulse keyframe, leaderboard
+  table styles, new-record badge animation, pause stats grid, abandon button
 
 ---
 
